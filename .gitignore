@@ -1,0 +1,65 @@
+# ----------------------
+# Python
+# ----------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.env.*
+
+# ----------------------
+# Flask
+# ----------------------
+instance/
+.webassets-cache
+
+# ----------------------
+# Environment variables
+# ----------------------
+.env
+.env.local
+
+# ----------------------
+# Database
+# ----------------------
+*.db
+*.sqlite3
+
+# PostgreSQL dump / backup
+*.sql
+*.dump
+
+# ----------------------
+# Logs
+# ----------------------
+*.log
+
+# ----------------------
+# VS Code
+# ----------------------
+.vscode/
+
+# ----------------------
+# OS files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# Node (se in futuro usi npm)
+# ----------------------
+node_modules/
+
+# ----------------------
+# Static files (opzionale)
+# ----------------------
+# Se generi file temporanei tipo immagini/grafici
+static/images/generated/
+
+# ----------------------
+# Cache vari
+# ----------------------
+.cache/
