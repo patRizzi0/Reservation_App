@@ -1,0 +1,79 @@
+.hall {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.sector {
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 260px;
+    background: #fff;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.seat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.row-label {
+    width: 55px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.seat {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #999;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.available {
+    background-color: white;
+}
+
+.occupied {
+    background-color: #dc3545;
+    color: white;
+    cursor: not-allowed;
+}
+
+.selected {
+    background-color: #198754;
+    color: white;
+}
+
+.seat-vip {
+    border: 2px solid gold;
+}
+
+.seat-premium {
+    border: 2px solid #0d6efd;
+}
+
+.seat-disabili {
+    border: 2px solid #6f42c1;
+}
+
+.screen {
+    max-width: 500px;
+    margin: 0 auto 30px auto;
+    padding: 10px;
+    border-radius: 8px;
+    background: #eee;
+    font-weight: bold;
+}

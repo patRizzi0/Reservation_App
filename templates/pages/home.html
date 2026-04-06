@@ -1,0 +1,40 @@
+{% extends "layout/base.html" %}
+
+{% block content %} 
+
+
+<div class="row g-4">
+
+    {% for q in events %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+
+            <div class="card-body">
+                <h5 class="card-title">{{ q["nome_evento"] }}</h5>
+                
+                <p class="mb-1">
+                    <strong>{{ q["data_evento"] }}</strong>
+                </p>
+
+                <p class="mb-3">
+                    <strong>{{ q["luogo"] }}</strong>
+                </p>
+
+                <p class="mb-3">
+                    <strong>Posti disponibili: {{ q["posti_disponibili"] }}</strong>
+                </p>
+            </div>
+
+            <div class="card-footer bg-white border-0">
+                <a href="/reservation/{{ q.id_evento }}" class="btn btn-primary w-100">
+                Prenota posto
+                </a>
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

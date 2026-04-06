@@ -1,0 +1,24 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Seleziona il tuo posto</h2>
+
+    <div class="screen text-center mb-4">SCHERMO / PALCO</div>
+
+    <div class="hall">
+        <div id="section-A" class="sector"></div>
+        <div id="section-B" class="sector"></div>
+        <div id="section-C" class="sector"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.seatsData = {{ seats | tojson | safe }};
+    console.log("Seats dal backend:", window.seatsData);
+</script>
+
+<script src="{{ url_for('static', filename='js/salon.js') }}"></script>
+{% endblock %}
