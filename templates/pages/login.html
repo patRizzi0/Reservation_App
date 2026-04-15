@@ -1,0 +1,143 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>🔐 Connexion</h1>
+            <p class="auth-subtitle">Entrez vos identifiants pour continuer</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" id="loginForm" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Step 1: Email -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    📧 <span class="step-badge">Étape 1</span> Email
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input"
+                    placeholder="nom@exemple.com"
+                    required
+                    autocomplete="email"
+                    onblur="validateEmail(this)"
+                >
+                <small class="form-helper">Entrez l'email de votre compte</small>
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <!-- Step 2: Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    🔑 <span class="step-badge">Étape 2</span> Mot de passe
+                </label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                        onblur="validatePassword(this)"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                </div>
+                <small class="form-helper">Entrez votre mot de passe (minimum 8 caractères)</small>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary btn-lg" id="submitBtn">
+                <span class="btn-text">Connexion</span>
+                <span class="btn-loader" style="display:none;">⏳</span>
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>Vous n'avez pas de compte ?</span>
+        </div>
+
+        <!-- Register Link -->
+        <a href="{{ url_for('register') }}" class="btn-secondary">
+            ✍️ Créer un nouveau compte
+        </a>
+
+        <a href="{{ url_for('home') }}" class="back-link">← Retour à l'accueil</a>
+    </div>
+</div>
+
+<script>
+function validateEmail(input) {
+    const email = input.value.trim();
+    const emailError = document.getElementById('emailError');
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!email) {
+        emailError.textContent = '❌ Email obligatoire';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (!regex.test(email)) {
+        emailError.textContent = '❌ Email invalide';
+        input.classList.add('input-error');
+        return false;
+    }
+    emailError.textContent = '';
+    input.classList.remove('input-error');
+    return true;
+}
+
+function validatePassword(input) {
+    const password = input.value;
+    const passwordError = document.getElementById('passwordError');
+    
+    if (!password) {
+        passwordError.textContent = '❌ Mot de passe obligatoire';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (password.length < 8) {
+        passwordError.textContent = '❌ Mot de passe trop court (min 8 caractères)';
+        input.classList.add('input-error');
+        return false;
+    }
+    passwordError.textContent = '';
+    input.classList.remove('input-error');
+    return true;
+}
+
+function togglePassword() {
+    const input = document.getElementById('password');
+    const btn = document.querySelector('.toggle-password');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const emailValid = validateEmail(document.getElementById('email'));
+    const passwordValid = validatePassword(document.getElementById('password'));
+    
+    if (!emailValid || !passwordValid) {
+        e.preventDefault();
+    } else {
+        document.getElementById('submitBtn').disabled = true;
+        document.querySelector('.btn-text').style.display = 'none';
+        document.querySelector('.btn-loader').style.display = 'inline';
+    }
+});
+</script>
+
+{% endblock %}

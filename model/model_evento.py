@@ -36,3 +36,21 @@ def get_event_id():
         events_id = result.mappings().all()
 
     return events_id
+
+
+def get_event_by_id(id_evento):
+    query = text("""
+    SELECT
+        id_evento,
+        nome_evento,
+        data_evento,
+        luogo
+    FROM events
+    WHERE id_evento = :id_evento
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(query, {"id_evento": id_evento})
+        event = result.mappings().first()
+
+    return dict(event) if event else None

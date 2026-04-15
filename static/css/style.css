@@ -1,0 +1,110 @@
+/* =============================================================
+   MAIN CSS ENTRY POINT
+   ============================================================= */
+
+/* Import CSS moduli */
+@import url("base.css");
+@import url("layout.css");
+@import url("component.css");
+@import url("seats.css");
+
+/* =============================================================
+   ADDITIONAL GLOBAL STYLES
+   ============================================================= */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+/* Link active states */
+a:active {
+    opacity: 0.8;
+}
+
+/* Headings */
+h1 {
+    font-size: var(--font-2xl);
+}
+
+h2 {
+    font-size: var(--font-xl);
+}
+
+h3 {
+    font-size: var(--font-lg);
+}
+
+/* Code blocks */
+code {
+    background: var(--color-bg);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    color: #d63384;
+}
+
+pre {
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+pre code {
+    color: var(--color-white);
+    background: none;
+    padding: 0;
+}
+
+/* Scroll behavior enhancement */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-light);
+}
+
+/* Focus visible */
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+    background: var(--color-accent);
+    color: var(--color-white);
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    body {
+        background: var(--color-white);
+    }
+}

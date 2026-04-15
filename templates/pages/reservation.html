@@ -1,24 +1,215 @@
 {% extends "layout/base.html" %}
 
 {% block content %}
-<div class="container py-5">
-    <h2 class="mb-4 text-center">Seleziona il tuo posto</h2>
+<div class="reservation-container">
 
-    <div class="screen text-center mb-4">SCHERMO / PALCO</div>
+    <section class="event-header">
+        <div class="event-header-content">
+            <h1>{{ evento.nome_evento }}</h1>
+            <div class="event-meta">
+                <span>{{ evento.data_evento }}</span>
+                <span>•</span>
+                <span>{{ evento.luogo }}</span>
+            </div>
+        </div>
+    </section>
 
-    <div class="hall">
-        <div id="section-A" class="sector"></div>
-        <div id="section-B" class="sector"></div>
-        <div id="section-C" class="sector"></div>
-    </div>
+    <section class="progress-steps">
+        <div class="step active" data-step="1">
+            <span class="step-number">1</span>
+            <span class="step-label">Sélection siège</span>
+        </div>
+        <div class="step" data-step="2">
+            <span class="step-number">2</span>
+            <span class="step-label">Données utilisateur</span>
+        </div>
+        <div class="step" data-step="3">
+            <span class="step-number">3</span>
+            <span class="step-label">Paiement</span>
+        </div>
+    </section>
+
+    <section class="main-card">
+
+        <!-- STEP 1 -->
+        <div id="step-1" class="form-step active-step">
+
+            <!-- SECTOR VIEW -->
+            <div id="sector-view" class="view-section">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Sélectionnez un secteur</h2>
+                        <p class="view-subtitle">Choisissez d'abord la zone, puis le siège.</p>
+                    </div>
+                </div>
+
+                <div id="sector-grid" class="sector-grid"></div>
+            </div>
+
+            <!-- SEAT VIEW -->
+            <div id="seatView" class="view-section hidden">
+                <div class="seat-layout">
+
+                    <div class="seats-panel">
+                        <div class="view-header">
+                            <div>
+                                <h2 id="selectedSectorTitle" class="view-title">Secteur</h2>
+                                <p class="view-subtitle">Sélectionnez le siège que vous préférez.</p>
+                            </div>
+                        </div>
+
+                        <div class="stage-label">SCÈNE</div>
+
+                        <div class="single-sector-wrapper">
+                            <div id="selectedSectorContainer" class="single-sector-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- DETAIL CARD -->
+                    <aside id="seatDetailCard" class="seat-detail-card" aria-hidden="false">
+                        <button id="backToSectorsBtn" type="button" class="back-btn"
+                            aria-label="Retour aux secteurs">✕</button>
+
+                        <h3>Détails du siège</h3>
+
+                        <p id="emptyCardMessage" class="empty-card-message">
+                            Sélectionnez un siège pour voir les détails.
+                        </p>
+
+                        <div class="seat-preview" id="seatPreviewNumber">--</div>
+
+                        <div class="seat-info-list">
+                            <p><strong>Secteur</strong> <span id="detail-section">--</span></p>
+                            <p><strong>Rang</strong> <span id="detail-row">--</span></p>
+                            <p><strong>Siège</strong> <span id="detail-number">--</span></p>
+                            <p><strong>Type</strong> <span id="detail-type">--</span></p>
+                            <p><strong>Disponibilité</strong> <span id="detail-status">--</span></p>
+                            <p><strong>Prix</strong> <span id="detail-price">--</span></p>
+                        </div>
+
+                        <button id="confirm-seat-btn" class="confirm-btn" type="button" disabled>
+                            Confirmer la sélection
+                        </button>
+                    </aside>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step-2" class="form-step hidden">
+            <div class="view-section">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Données utilisateur</h2>
+                        <p class="view-subtitle">Insérez vos informations personnelles.</p>
+                    </div>
+                </div>
+
+                <form id="user-data-form" class="user-data-form">
+                    <div class="form-group">
+                        <label for="nome">Nom</label>
+                        <input type="text" id="nome" name="nome" placeholder="Votre nom" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cognome">Prénom</label>
+                        <input type="text" id="cognome" name="cognome" placeholder="Votre prénom" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Votre email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono">Téléphone</label>
+                        <input type="text" id="telefono" name="telefono" placeholder="Votre numéro de téléphone">
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" id="back-to-step-1" class="secondary-btn">Retour</button>
+                        <button type="button" id="go-to-step-3" class="confirm-btn">Continuer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step-3" class="form-step hidden">
+            <div class="view-section">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Paiement</h2>
+                        <p class="view-subtitle">Simulation de paiement pour démonstration.</p>
+                    </div>
+                </div>
+
+                <form id="payment-form" class="payment-form" method="POST"
+                    action="{{ url_for('confirm') }}">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Hidden inputs -->
+                    <input type="hidden" name="id_evento" value="{{ evento.id_evento }}">
+                    <input type="hidden" name="selected_seat_id" id="selected_seat_id">
+                    <input type="hidden" name="selected_sector" id="selected_sector">
+                    <input type="hidden" name="selected_row" id="selected_row">
+                    <input type="hidden" name="selected_number" id="selected_number">
+                    <input type="hidden" name="selected_price" id="selected_price_hidden">
+
+                    <input type="hidden" name="nome_hidden" id="nome_hidden">
+                    <input type="hidden" name="cognome_hidden" id="cognome_hidden">
+                    <input type="hidden" name="email_hidden" id="email_hidden">
+                    <input type="hidden" name="telefono_hidden" id="telefono_hidden">
+
+                    <div class="reservation-summary">
+                        <h3>Récapitulatif</h3>
+                        <p><strong>Événement:</strong> {{ evento.nome_evento }}</p>
+                        <p><strong>Secteur:</strong> <span id="summary-sector">--</span></p>
+                        <p><strong>Rang:</strong> <span id="summary-row">--</span></p>
+                        <p><strong>Siège:</strong> <span id="summary-seat">--</span></p>
+                        <p><strong>Prix:</strong> <span id="summary-price">--</span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="card_name">Nom sur la carte</label>
+                        <input type="text" id="card_name" name="card_name" placeholder="Nom complet">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="card_number">Numéro de carte</label>
+                        <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiry">Expiration</label>
+                            <input type="text" id="expiry" name="expiry" placeholder="MM/AA">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cvv">CVV</label>
+                            <input type="text" id="cvv" name="cvv" placeholder="123">
+                        </div>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" id="back-to-step-2" class="secondary-btn">Retour</button>
+                        <button type="submit" class="confirm-btn">Confirmer la réservation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </section>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    window.seatsData = {{ seats | tojson | safe }};
-    console.log("Seats dal backend:", window.seatsData);
+    window.eventData = {{ evento | tojson }};
+    window.seatsData = {{ seats | tojson }};
 </script>
 
-<script src="{{ url_for('static', filename='js/salon.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reservation.js') }}"></script>
 {% endblock %}

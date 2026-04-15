@@ -1,0 +1,290 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>📝 Créer un compte</h1>
+            <p class="auth-subtitle">Inscrivez-vous en quelques étapes simples</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" id="registerForm" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Step 1: Nome -->
+            <div class="form-group">
+                <label for="nome" class="form-label">
+                    👤 <span class="step-badge">Étape 1</span> Prénom
+                </label>
+                <input 
+                    type="text" 
+                    id="nome" 
+                    name="nome" 
+                    class="form-input"
+                    placeholder="Ex: Patrick"
+                    required
+                    onblur="validateField(this, 'nome')"
+                >
+                <div class="error-message" id="nomeError"></div>
+            </div>
+
+            <!-- Step 2: Cognome -->
+            <div class="form-group">
+                <label for="cognome" class="form-label">
+                    👥 <span class="step-badge">Étape 2</span> Nom
+                </label>
+                <input 
+                    type="text" 
+                    id="cognome" 
+                    name="cognome" 
+                    class="form-input"
+                    placeholder="Ex: Gouto"
+                    required
+                    onblur="validateField(this, 'cognome')"
+                >
+                <div class="error-message" id="cognomeError"></div>
+            </div>
+
+            <!-- Step 3: Email -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    📧 <span class="step-badge">Étape 3</span> Email
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input"
+                    placeholder="nom@exemple.com"
+                    required
+                    autocomplete="email"
+                    onblur="validateEmail(this)"
+                >
+                <small class="form-helper">Ceci sera votre email de connexion</small>
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <!-- Step 4: Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    🔑 <span class="step-badge">Étape 4</span> Mot de passe
+                </label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="••••••••"
+                        required
+                        onblur="validatePassword(this)"
+                        oninput="checkPasswordStrength()"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                </div>
+                <div class="password-strength" id="strengthBar"></div>
+                <small class="form-helper">
+                    ✓ Au moins 8 caractères | ✓ Majuscules | ✓ Chiffres | ✓ Caractères spéciaux
+                </small>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <!-- Step 5: Conferma Password -->
+            <div class="form-group">
+                <label for="password_confirm" class="form-label">
+                    ✓ <span class="step-badge">Étape 5</span> Confirmer mot de passe
+                </label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password_confirm" 
+                        name="password_confirm" 
+                        class="form-input"
+                        placeholder="••••••••"
+                        required
+                        onblur="validatePasswordMatch()"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePasswordConfirm()">👁️</button>
+                </div>
+                <div class="error-message" id="confirmError"></div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary btn-lg" id="submitBtn">
+                <span class="btn-text">✍️ M'inscrire</span>
+                <span class="btn-loader" style="display:none;">⏳</span>
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>Vous avez déjà un compte ?</span>
+        </div>
+
+        <!-- Login Link -->
+        <a href="{{ url_for('login') }}" class="btn-secondary">
+            🔐 Se connecter à votre compte
+        </a>
+
+        <a href="{{ url_for('home') }}" class="back-link">← Retour à l'accueil</a>
+    </div>
+</div>
+
+<script>
+function validateField(input, fieldName) {
+    const value = input.value.trim();
+    const errorDiv = document.getElementById(fieldName + 'Error');
+    
+    if (!value) {
+        errorDiv.textContent = `❌ ${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} obligatoire`;
+        input.classList.add('input-error');
+        return false;
+    }
+    if (value.length < 2) {
+        errorDiv.textContent = `❌ ${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} trop court`;
+        input.classList.add('input-error');
+        return false;
+    }
+    errorDiv.textContent = '';
+    input.classList.remove('input-error');
+    return true;
+}
+
+function validateEmail(input) {
+    const email = input.value.trim();
+    const emailError = document.getElementById('emailError');
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!email) {
+        emailError.textContent = '❌ Email obligatoire';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (!regex.test(email)) {
+        emailError.textContent = '❌ Email invalide';
+        input.classList.add('input-error');
+        return false;
+    }
+    emailError.textContent = '';
+    input.classList.remove('input-error');
+    return true;
+}
+
+function validatePassword(input) {
+    const password = input.value;
+    const passwordError = document.getElementById('passwordError');
+    
+    if (!password) {
+        passwordError.textContent = '❌ Mot de passe obligatoire';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (password.length < 8) {
+        passwordError.textContent = '❌ Mot de passe trop court (min 8 caractères)';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (!/[A-Z]/.test(password)) {
+        passwordError.textContent = '❌ Ajouter au moins une lettre MAJUSCULE';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (!/[0-9]/.test(password)) {
+        passwordError.textContent = '❌ Ajouter au moins un CHIFFRE';
+        input.classList.add('input-error');
+        return false;
+    }
+    if (!/[!@#$%^&*]/.test(password)) {
+        passwordError.textContent = '❌ Ajouter un caractère spécial (!@#$%^&*)';
+        input.classList.add('input-error');
+        return false;
+    }
+    passwordError.textContent = '';
+    input.classList.remove('input-error');
+    return true;
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('password_confirm').value;
+    const confirmError = document.getElementById('confirmError');
+    
+    if (!confirm) {
+        confirmError.textContent = '❌ Confirmation mot de passe obligatoire';
+        document.getElementById('password_confirm').classList.add('input-error');
+        return false;
+    }
+    if (password !== confirm) {
+        confirmError.textContent = '❌ Les mots de passe ne correspondent pas';
+        document.getElementById('password_confirm').classList.add('input-error');
+        return false;
+    }
+    confirmError.textContent = '✅ Les mots de passe correspondent !';
+    document.getElementById('password_confirm').classList.remove('input-error');
+    return true;
+}
+
+function checkPasswordStrength() {
+    const password = document.getElementById('password').value;
+    const strengthBar = document.getElementById('strengthBar');
+    let strength = 0;
+    
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[!@#$%^&*]/.test(password)) strength++;
+    
+    strengthBar.className = 'password-strength';
+    if (strength === 1) strengthBar.classList.add('weak');
+    if (strength === 2) strengthBar.classList.add('fair');
+    if (strength === 3) strengthBar.classList.add('good');
+    if (strength === 4) strengthBar.classList.add('strong');
+    
+    const labels = ['', 'Faible', 'Acceptable', 'Forte', 'Très Forte'];
+    strengthBar.textContent = labels[strength];
+}
+
+function togglePassword() {
+    const input = document.getElementById('password');
+    const btn = document.querySelector('.toggle-password');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
+function togglePasswordConfirm() {
+    const input = document.getElementById('password_confirm');
+    const buttons = document.querySelectorAll('.toggle-password');
+    const btn = buttons[1];
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const nomeValid = validateField(document.getElementById('nome'), 'nome');
+    const cognomeValid = validateField(document.getElementById('cognome'), 'cognome');
+    const emailValid = validateEmail(document.getElementById('email'));
+    const passwordValid = validatePassword(document.getElementById('password'));
+    const confirmValid = validatePasswordMatch();
+    
+    if (!nomeValid || !cognomeValid || !emailValid || !passwordValid || !confirmValid) {
+        e.preventDefault();
+    } else {
+        document.getElementById('submitBtn').disabled = true;
+        document.querySelector('.btn-text').style.display = 'none';
+        document.querySelector('.btn-loader').style.display = 'inline';
+    }
+});
+</script>
+
+{% endblock %}

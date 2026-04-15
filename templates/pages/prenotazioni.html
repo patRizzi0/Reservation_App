@@ -1,0 +1,69 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+
+<div class="prenotazioni-wrapper">
+    <!-- Header -->
+    <div class="prenotazioni-header">
+        <div class="header-content">
+            <h1>📋 Mes réservations</h1>
+            <p class="header-subtitle">Ici, vous pouvez voir et gérer toutes vos réservations</p>
+        </div>
+        <a href="{{ url_for('home') }}" class="btn-new-reservation">
+            + Réserver un autre événement
+        </a>
+    </div>
+
+    <!-- Lista Prenotazioni -->
+    <div class="prenotazioni-container">
+        {% if reservations %}
+            {% for reservation in reservations %}
+            <section class="prenotazione-card">
+
+                <div class="prenotazione-left">
+                    <div class="user-badge">👤</div>
+                    <div class="user-info">
+                        {{ reservation.nome }} {{ reservation.cognome }}
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="prenotazione-right">
+                    <div class="prenotazioni-evento">
+                        🎫 {{ reservation.nome_evento }}
+                    </div>
+
+                    <div class="prenotazioni-posto">
+                        📍 Sezione: <strong>{{ reservation.section }}</strong> |
+                        📊 Riga: <strong>{{ reservation.row_number }}</strong> |
+                        🪑 Numero: <strong>{{ reservation.seat_number }}</strong>
+                    </div>
+                </div>
+
+                <div class="prenotazione-actions">
+                    <button class="btn-action" onclick="alert('Modifica prenotazione')">✏️ Modifica</button>
+                    <button class="btn-action btn-danger" onclick="alert('Elimina prenotazione')">🗑️ Cancella</button>
+                </div>
+
+            </section>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎫</div>
+                <h3>Nessuna prenotazione</h3>
+                <p>Non hai ancora effettuato alcuna prenotazione</p>
+                <a href="{{ url_for('home') }}" class="btn-primary">
+                    Scopri gli eventi disponibili
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Floating Action Button -->
+    <a href="{{ url_for('home') }}" class="fab-button">
+        +
+    </a>
+</div>
+
+{% endblock %}

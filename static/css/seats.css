@@ -1,0 +1,462 @@
+/* ============================================
+   VARIABILI CSS - DESIGN TOKENS
+   ============================================ */
+:root {
+    --color-available: #4ade80;
+    --color-standard: #4ade80;
+    --color-premium: #f59e0b;
+    --color-vip: #ec4899;
+    --color-disabled: #9ca3af;
+    --color-occupied: #ef4444;
+    --color-selected: #10b981;
+
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.8rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+
+    --radius-sm: 0.6rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.2rem;
+
+    --font-sm: 0.85rem;
+    --font-base: 0.95rem;
+    --font-lg: 1.3rem;
+    --font-xl: 1.4rem;
+
+    --shadow-sm: 0 12px 35px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 0 20px rgba(16, 185, 129, 0.25);
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.25s ease;
+}
+
+/* ============================================
+   WRAPPER GENERALE
+   ============================================ */
+.booking-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    padding: var(--spacing-xl);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.booking-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.booking-title {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-xl);
+    font-weight: 700;
+}
+
+.screen {
+    margin-bottom: var(--spacing-xl);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ============================================
+   LAYOUT PRINCIPALE
+   ============================================ */
+.booking-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-2xl);
+    width: 100%;
+}
+
+/* ============================================
+   HALL - Contenitore Settori
+   ============================================ */
+.hall {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2.5rem;
+    flex: 1;
+    width: 100%;
+}
+
+/* ============================================
+   SETTORI (A, B, C)
+   ============================================ */
+.sector {
+    flex: 1;
+    min-width: 18rem;
+    padding: var(--spacing-md);
+}
+
+.section-title {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-xl);
+    font-weight: 700;
+    text-align: center;
+}
+
+/* ============================================
+   RIGHE DI POSTI
+   ============================================ */
+.seat-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.3rem;
+    margin-bottom: 0.4rem;
+    align-items: center;
+}
+
+.row-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+    margin-right: 0.3rem;
+    color: #6b7280;
+}
+
+/* ============================================
+   POSTI - BASE
+   ============================================ */
+.seat {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 0.6rem;
+    font-weight: 600;
+
+    transition: transform var(--transition-fast),
+                box-shadow var(--transition-fast),
+                border-color var(--transition-fast);
+
+    background: white;
+    color: #111827;
+}
+
+.seat:not(:disabled):hover {
+    transform: scale(1.2);
+}
+
+.seat.selected {
+    transform: scale(1.3);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+}
+
+/* ============================================
+   STATI POSTI - DISPONIBILITÀ
+   ============================================ */
+.seat.available {
+    background: var(--color-standard);
+    color: white;
+    border-color: var(--color-standard);
+}
+
+.seat.occupied {
+    background: var(--color-occupied);
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: var(--color-occupied);
+    color: white;
+}
+
+.seat:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ============================================
+   TIPI DI POSTO - STYLING
+   ============================================ */
+.seat-standard.available {
+    background: var(--color-standard);
+    border-color: #22c55e;
+}
+
+.seat-premium.available {
+    background: var(--color-premium);
+    border-color: #f59e0b;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.seat-vip.available {
+    background: var(--color-vip);
+    border: 2px solid #be123c;
+    color: white;
+    font-weight: 700;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.seat-disabili.available {
+    background: var(--color-disabled);
+    border: 2px solid #6366f1;
+    outline: 2px solid #0ea5e9;
+    outline-offset: 1px;
+    color: white;
+}
+
+/* ============================================
+   CARD DETTAGLI POSTO
+   ============================================ */
+.seat-detail-card {
+    width: 100%;
+    max-width: 600px;
+    min-height: 280px;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    flex-shrink: 0;
+    position: relative;
+
+    transition: all var(--transition-base);
+}
+
+.seat-detail-card.hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    aria-hidden: true;
+}
+
+.seat-detail-card:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+    aria-hidden: false;
+}
+
+/* Titolo */
+.seat-detail-card h3 {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Preview numero posto */
+.seat-preview {
+    width: 100%;
+    height: 110px;
+    border-radius: var(--radius-md);
+
+    background: linear-gradient(145deg, #34d399, var(--color-selected));
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 2.5rem;
+    font-weight: 700;
+
+    margin-bottom: var(--spacing-lg);
+
+    box-shadow: var(--shadow-md);
+}
+
+/* Info dettagli */
+.seat-info {
+    flex: 1;
+}
+
+.seat-info p {
+    margin-bottom: 0.5rem;
+    font-size: var(--font-base);
+    color: #111827;
+}
+
+/* ============================================
+   BOTTONE CONFERMA
+   ============================================ */
+.confirm-seat-btn {
+    margin-top: var(--spacing-lg);
+
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.8rem;
+
+    background: #111827;
+    color: white;
+
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: all var(--transition-fast);
+}
+
+.confirm-seat-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    opacity: 0.92;
+    background: #1f2937;
+}
+
+.confirm-seat-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   BOTTONE CHIUSURA
+   ============================================ */
+.close-card-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+
+    border: none;
+    background: transparent;
+
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #6b7280;
+
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.close-card-btn:hover {
+    color: #111827;
+    transform: scale(1.2);
+}
+
+.close-card-btn:focus {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet landscape e up */
+@media (max-width: 1024px) {
+    .booking-layout {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .hall {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .sector {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .seat-detail-card {
+        width: 100%;
+        max-width: 400px;
+    }
+}
+
+/* Tablet portrait */
+@media (max-width: 768px) {
+    .booking-wrapper {
+        padding: var(--spacing-lg);
+    }
+
+    .hall {
+        gap: var(--spacing-lg);
+    }
+
+    .seat {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 0.75rem;
+    }
+
+    .seat-detail-card {
+        margin-top: var(--spacing-lg);
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .booking-wrapper {
+        padding: var(--spacing-md);
+        min-height: auto;
+    }
+
+    .booking-header {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .booking-title {
+        font-size: 1.1rem;
+    }
+
+    .hall {
+        gap: var(--spacing-md);
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sector {
+        min-width: auto;
+        width: 100%;
+        padding: var(--spacing-sm);
+    }
+
+    .seat {
+        width: 2rem;
+        height: 2rem;
+        border-width: 1px;
+        font-size: 0.7rem;
+    }
+
+    .seat-row {
+        gap: 0.25rem;
+    }
+
+    .row-label {
+        font-size: 0.7rem;
+        min-width: 3rem;
+    }
+
+    .seat-detail-card {
+        width: 100%;
+        min-height: auto;
+        padding: var(--spacing-md);
+    }
+
+    .seat-preview {
+        height: 80px;
+        font-size: 2rem;
+    }
+}
+
+/* Supporto prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .seat:hover,
+    .seat.selected {
+        transform: none;
+    }
+}

@@ -1,0 +1,43 @@
+<header class="site-header">
+    <div class="container-fluid header-inner">
+        <div class="brand-area">
+            <a href="{{ url_for('home') }}" class="brand-logo">ReservationApp</a>
+            <span class="brand-subtitle">Ticketing Experience</span>
+        </div>
+
+        <nav class="main-nav">
+            <a href="{{ url_for('home') }}" class="nav-link">🏠 Accueil</a>
+            {% if current_user %}
+            <a href="{{ url_for('prenotazioni') }}" class="nav-link active-if-prenotazioni">📋 Mes r&#233;servations</a>
+            {% endif %}
+        </nav>
+
+        <div class="header-user-area">
+            {% if current_user %}
+                <!-- Utilisateur connecté -->
+                <div class="user-section">
+                    <span class="user-name">👤 {{ current_user.nome }} {{ current_user.cognome }}</span>
+                    <a href="{{ url_for('profilo') }}" class="btn-header btn-profile">
+                        ⚙️ Profil
+                    </a>
+                    <form method="POST" action="{{ url_for('logout') }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-header btn-logout">
+                            🚪 Déconnexion
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <!-- Utilisateur NON connecté -->
+                <div class="user-section">
+                    <a href="{{ url_for('register') }}" class="btn-header btn-register">
+                        ✍️ S'inscrire
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn-header btn-login">
+                        🔐 Se connecter
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</header>
