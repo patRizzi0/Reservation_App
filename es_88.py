@@ -1,26 +1,25 @@
-nums1 = [1,2,3,0,0,0]
-nums2 = [2,5,6]
+nums1 = [1, 2, 3, 0, 0, 0]
+nums2 = [2, 5, 6]
 
 m = 3
 n = 3
 
-i = 0
-while(len(nums2) == m + n):
-    nums2.append(0)
-    i +=1
+i = m - 1          # ultimo elemento valido di nums1
+j = n - 1          # ultimo elemento di nums2
+k = m + n - 1      # ultima posizione totale di nums1
 
-print(nums2)
-
-sorted_arr = []
-i = 0
-while len(sorted_arr) !=(m+n) -1:
-    if nums1[i] >= nums2[i]:
-        sorted_arr.append(nums2[i])
-    elif(nums1[i] < nums2[i]):
-        sorted_arr.append(nums1[i])
+while i >= 0 and j >= 0:
+    if nums1[i] > nums2[j]:
+        nums1[k] = nums1[i]
+        i -= 1
     else:
-        sorted_arr.append(nums2[i])
-        sorted_arr.append(nums1[i])
-    i+=1
+        nums1[k] = nums2[j]
+        j -= 1
+    k -= 1
 
+while j >= 0:
+    nums1[k] = nums2[j]
+    j -= 1
+    k -= 1
 
+print(nums1) 

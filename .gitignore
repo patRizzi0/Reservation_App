@@ -63,3 +63,6 @@ static/images/generated/
 # Cache vari
 # ----------------------
 .cache/
+
+.requirements.txt
+

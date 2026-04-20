@@ -1,7 +1,18 @@
-{% extends "layout/base.html" %}
+{% block content %}
 
-{% block content %} 
+<h1 style="color: green;">✅ Réservation confirmée !</h1>
 
-<h1> Reservation confirmée</h1>
+<p>Merci pour votre réservation 🎉</p>
+
+<div class="summary-card">
+    <h2>Détails</h2>
+    <p><strong>Événement :</strong> {{ evento["nome_evento"] }}</p>
+    <p><strong>Place :</strong> {{ seat_id }}</p>
+</div>
+
+<div class="actions">
+    <a href="/">🏠 Accueil</a>
+    <a href="/events">🎫 Autres événements</a>
+</div>
 
 {% endblock %}

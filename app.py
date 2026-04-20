@@ -257,24 +257,6 @@ def reservation(id_evento):
     if not evento:
         return render_template("pages/404.html"), 404
 
-    if request.method == "POST":
-        if "id_user" not in session:
-            flash("You need to log in to make a reservation", "warning")
-            return redirect(url_for("login"))
-
-        seat_id = request.form.get("selected_seat_id")
-        user_id = session["id_user"]
-
-        
-
-        try:
-            create_reservation(user_id, id_evento, seat_id)
-            flash("Reservation successful!", "success")
-            return redirect(url_for("prenotazioni"))
-
-        except Exception as e:
-            logger.error(f"Error creating reservation: {e}", exc_info=True)
-            flash("Error creating reservation. Try again.", "error")
 
     return render_template(
         "pages/reservation.html",
@@ -289,23 +271,16 @@ def confirm():
         return redirect(url_for("login"))
 
     user_id = session["id_user"]
-
     event_id = request.form.get("id_evento")
     seat_id = request.form.get("selected_seat_id")
 
-    print("CONFIRM DEBUG:", user_id, event_id, seat_id)
 
     try:
         create_reservation(user_id, event_id, seat_id)
-
-        return f"""
-    <h1>Ce l'hai fatta! 🎉</h1>
-    <p>Prenotazione salvata.</p>
-    """
-
     except Exception as e:
         print("ERRORE:", e)
-        return "Errore DB", 500
+        return redirect(url_for("home"))
+    return render_template("pages/confirm.html", user_id=user_id, seat_id=seat_id, evento = get_event_by_id(event_id))
 
 @app.route("/prenotazioni")
 @login_required
