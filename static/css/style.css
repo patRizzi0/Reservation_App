@@ -3,11 +3,11 @@
    ============================================================= */
 
 /* Import CSS moduli */
+@import url("themes.css");
 @import url("base.css");
 @import url("layout.css");
 @import url("component.css");
 @import url("seats.css");
-@import url("themes.css");
 
 /* =============================================================
    ADDITIONAL GLOBAL STYLES
