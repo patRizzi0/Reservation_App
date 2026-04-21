@@ -66,3 +66,9 @@ static/images/generated/
 
 .requirements.txt
 
+run_schema.py
+drop.sql
+seed.sql
+run_schema.py
+
+__pycache__/
