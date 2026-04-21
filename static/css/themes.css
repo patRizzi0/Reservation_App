@@ -1,0 +1,177 @@
+/* =============================================================
+   TEMA: MODERNA (default)
+   Palette: bianco caldo, grigi neutri, accento teal sobrio
+   ============================================================= */
+:root,
+[data-theme="moderna"] {
+    /* Colori principali */
+    --color-primary: #1a1a2e;
+    --color-secondary: #16213e;
+    --color-accent: #0ea5e9;
+    --color-accent-dark: #0284c7;
+
+    /* Testo */
+    --color-text: #1e293b;
+    --color-text-light: #64748b;
+
+    /* Superfici */
+    --color-bg: #f8fafc;
+    --color-white: #ffffff;
+    --color-border: #e2e8f0;
+
+    /* Posti */
+    --color-available: #22c55e;
+    --color-premium: #f59e0b;
+    --color-vip: #a855f7;
+    --color-disabled: #94a3b8;
+    --color-occupied: #ef4444;
+
+    /* Buttons override - rimuove il viola hardcodato */
+    --color-nav-accent: #0ea5e9;
+    --color-btn-login-from: #0ea5e9;
+    --color-btn-login-to: #0284c7;
+    --color-btn-login-shadow: rgba(14, 165, 233, 0.3);
+
+    /* Spacing, radius, font, shadow, transition — invariati */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+
+    --font-xs: 0.75rem;
+    --font-sm: 0.875rem;
+    --font-base: 1rem;
+    --font-lg: 1.125rem;
+    --font-xl: 1.25rem;
+    --font-2xl: 1.5rem;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.12);
+
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+}
+
+
+/* =============================================================
+   TEMA: ELEGANTE
+   Palette: nero profondo, oro/champagne, bianco sporco
+   ============================================================= */
+[data-theme="elegante"] {
+    --color-primary: #0f0f0f;
+    --color-secondary: #1a1a1a;
+    --color-accent: #c9a84c;
+    --color-accent-dark: #a8853a;
+
+    --color-text: #1a1a1a;
+    --color-text-light: #6b6b6b;
+
+    --color-bg: #faf9f7;
+    --color-white: #fffffe;
+    --color-border: #e8e4dc;
+
+    --color-available: #5a8a5a;
+    --color-premium: #c9a84c;
+    --color-vip: #8b6f9e;
+    --color-disabled: #a0a0a0;
+    --color-occupied: #c0392b;
+
+    --color-nav-accent: #c9a84c;
+    --color-btn-login-from: #1a1a1a;
+    --color-btn-login-to: #0f0f0f;
+    --color-btn-login-shadow: rgba(201, 168, 76, 0.25);
+
+    /* Spacing, radius, font, shadow invariati */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+
+    --font-xs: 0.75rem;
+    --font-sm: 0.875rem;
+    --font-base: 1rem;
+    --font-lg: 1.125rem;
+    --font-xl: 1.25rem;
+    --font-2xl: 1.5rem;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+}
+
+
+/* =============================================================
+   FIX: Override colori hardcodati in layout.css
+   Questi selettori sovrascrivono i #667eea / #764ba2 hardcodati
+   ============================================================= */
+.brand-logo {
+    color: var(--color-nav-accent) !important;
+}
+
+.brand-logo:hover {
+    color: var(--color-accent-dark) !important;
+}
+
+.nav-link:hover,
+.nav-link.active-if-prenotazioni {
+    color: var(--color-nav-accent) !important;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent) !important;
+}
+
+.btn-register {
+    color: var(--color-nav-accent) !important;
+    border-color: var(--color-nav-accent) !important;
+}
+
+.btn-register:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent) !important;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, var(--color-btn-login-from) 0%, var(--color-btn-login-to) 100%) !important;
+    border: none !important;
+}
+
+.btn-login:hover {
+    box-shadow: 0 6px 12px var(--color-btn-login-shadow) !important;
+}
+
+/* Step attivo — usa l'accento del tema corrente */
+.step.active {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+}
+
+/* Bottoni a larghezza piena nella home (quelli viola nel screenshot) */
+.btn-reserve,
+[class*="btn-book"],
+.btn-primary {
+    background: var(--color-primary) !important;
+    color: var(--color-white) !important;
+}
+
+.btn-reserve:hover,
+[class*="btn-book"]:hover,
+.btn-primary:hover {
+    background: var(--color-secondary) !important;
+}

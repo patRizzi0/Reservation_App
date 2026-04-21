@@ -14,30 +14,34 @@
 
         <div class="header-user-area">
             {% if current_user %}
-                <!-- Utilisateur connecté -->
-                <div class="user-section">
-                    <span class="user-name">👤 {{ current_user.nome }} {{ current_user.cognome }}</span>
-                    <a href="{{ url_for('profilo') }}" class="btn-header btn-profile">
-                        ⚙️ Profil
-                    </a>
-                    <form method="POST" action="{{ url_for('logout') }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn-header btn-logout">
-                            🚪 Déconnexion
-                        </button>
-                    </form>
-                </div>
+            <!-- Utilisateur connecté -->
+            <div class="user-section">
+                <span class="user-name">👤 {{ current_user.nome }} {{ current_user.cognome }}</span>
+                <a href="{{ url_for('profilo') }}" class="btn-header btn-profile">
+                    ⚙️ Profil
+                </a>
+                <form method="POST" action="{{ url_for('logout') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn-header btn-logout">
+                        🚪 Déconnexion
+                    </button>
+                </form>
+            </div>
             {% else %}
-                <!-- Utilisateur NON connecté -->
-                <div class="user-section">
-                    <a href="{{ url_for('register') }}" class="btn-header btn-register">
-                        ✍️ S'inscrire
-                    </a>
-                    <a href="{{ url_for('login') }}" class="btn-header btn-login">
-                        🔐 Se connecter
-                    </a>
-                </div>
+            <!-- Utilisateur NON connecté -->
+            <div class="user-section">
+                <a href="{{ url_for('register') }}" class="btn-header btn-register">
+                    ✍️ S'inscrire
+                </a>
+                <a href="{{ url_for('login') }}" class="btn-header btn-login">
+                    🔐 Se connecter
+                </a>
+            </div>
             {% endif %}
         </div>
+
+        <button onclick="ThemeSwitcher.toggle()" class="btn-header btn-profile">
+            🎨 <span data-theme-indicator>Moderna</span>
+        </button>
     </div>
 </header>
