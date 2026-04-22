@@ -1,13 +1,13 @@
 {% extends "layout/base.html" %}
 
-{% block content %} 
+{% block content %}
 
 
-<div class="row g-4">
+<section class="home-page">
+<div class="home-events-grid">
 
     {% for q in events %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100">
+    <article class="home-event-card card">
 
             <div class="card-body">
                 <h5 class="card-title">{{ q["nome_evento"] }}</h5>
@@ -26,15 +26,15 @@
             </div>
 
             <div class="card-footer bg-white border-0">
-                <a href="/reservation/{{ q.id_evento }}" class="btn btn-primary w-100">
+                <a href="/reservation/{{ q.id_evento }}" class="btn btn-primary btn-reserve">
                 Réserver une place
                 </a>
             </div>
 
-        </div>
-    </div>
+    </article>
     {% endfor %}
 
 </div>
+</section>
 
 {% endblock %}

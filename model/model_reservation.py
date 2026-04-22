@@ -44,13 +44,13 @@ def create_reservation(user_id, event_id, seat_id):
         if result > 0:
             raise Exception("Posto già prenotato")
         else:
-             query_ins = text("""
+            query_ins = text("""
                 INSERT INTO reservations (id_user, id_evento, id_seat)
                 VALUES (:user_id, :event_id, :seat_id)
             """)
-        conn.execute(query_ins, {
-            "user_id": user_id,
-            "event_id": event_id,
-            "seat_id": seat_id
-        })
+            conn.execute(query_ins, {
+                "user_id": user_id,
+                "event_id": event_id,
+                "seat_id": seat_id
+            })
 
