@@ -35,21 +35,38 @@ def get_user_reservations(user_id):
 
 
 def create_reservation(user_id, event_id, seat_id):
-    query = text("""
-        INSERT INTO reservations (id_user, id_evento, id_seat)
-        VALUES (:user_id, :event_id, :seat_id)
-        ON CONFLICT (id_evento, id_seat) DO NOTHING
-        RETURNING id_reservation
-    """)
-
     with engine.begin() as conn:
-        reservation_id = conn.execute(query, {
-            "user_id": user_id,
+        locked_seat = conn.execute(text("""
+            SELECT id_seat
+            FROM seats
+            WHERE id_seat = :seat_id
+            FOR UPDATE
+        """), {"seat_id": seat_id}).scalar()
+
+        if locked_seat is None:
+            raise ValueError("Posto non valido")
+
+        existing_reservation = conn.execute(text("""
+            SELECT 1
+            FROM reservations
+            WHERE id_evento = :event_id AND id_seat = :seat_id
+            LIMIT 1
+        """), {
             "event_id": event_id,
             "seat_id": seat_id
         }).scalar()
 
-        if reservation_id is None:
+        if existing_reservation is not None:
             raise ReservationAlreadyExists("Posto gia prenotato")
+
+        reservation_id = conn.execute(text("""
+            INSERT INTO reservations (id_user, id_evento, id_seat)
+            VALUES (:user_id, :event_id, :seat_id)
+            RETURNING id_reservation
+        """), {
+            "user_id": user_id,
+            "event_id": event_id,
+            "seat_id": seat_id
+        }).scalar()
 
         return reservation_id
