@@ -72,3 +72,5 @@ seed.sql
 run_schema.py
 
 __pycache__/
+
+test_cuncurrency.py

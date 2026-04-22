@@ -28,13 +28,27 @@ def get_user_reservations(user_id):
         return result.mappings().all()
     
 def create_reservation(user_id, event_id, seat_id):
-    query = text("""
-    INSERT INTO reservations (id_user, id_evento, id_seat)
-    VALUES (:user_id, :event_id, :seat_id)
+    query_select = text("""
+        Select count(*) from reservations
+        where id_evento = :event_id and id_seat = :seat_id
+        for update
     """)
 
+
     with engine.begin() as conn:
-        conn.execute(query, {
+        result = conn.execute(query_select, {
+            "event_id": event_id,
+            "seat_id": seat_id
+        }).scalar()
+
+        if result > 0:
+            raise Exception("Posto già prenotato")
+        else:
+             query_ins = text("""
+                INSERT INTO reservations (id_user, id_evento, id_seat)
+                VALUES (:user_id, :event_id, :seat_id)
+            """)
+        conn.execute(query_ins, {
             "user_id": user_id,
             "event_id": event_id,
             "seat_id": seat_id

@@ -279,7 +279,7 @@ def confirm():
         create_reservation(user_id, event_id, seat_id)
     except Exception as e:
         print("ERRORE:", e)
-        return redirect(url_for("home"))
+        flash("⚠️ Posto già prenotato. Scegli un altro posto.", "error")
     return render_template("pages/confirm.html", user_id=user_id, seat_id=seat_id, evento = get_event_by_id(event_id))
 
 @app.route("/prenotazioni")
