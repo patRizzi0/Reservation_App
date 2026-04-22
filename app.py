@@ -9,6 +9,7 @@ from functools import wraps
 from flask import Flask, redirect, render_template, request, session, flash, url_for
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from flask_limiter import Limiter
+from flask_limiter.errors import RateLimitExceeded
 from flask_limiter.util import get_remote_address
 from limits import parse
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -69,6 +70,19 @@ def handle_csrf_error(e):
     logger.warning(f"CSRF validation failed for {get_remote_address()}: {e.description}")
     flash("Sessione scaduta o richiesta non valida. Riprova.", "error")
     return redirect(request.referrer or url_for("home"))
+
+
+@app.errorhandler(RateLimitExceeded)
+def handle_rate_limit_error(e):
+    logger.warning(
+        "Rate limit exceeded for %s on endpoint=%s path=%s limit=%s",
+        get_remote_address(),
+        request.endpoint,
+        request.path,
+        e.description,
+    )
+    flash("Troppe richieste. Aspetta qualche minuto e riprova.", "error")
+    return redirect(request.referrer or url_for("home")), 429
 
 
 # 🔥 CRITICAL: Complete decorator
