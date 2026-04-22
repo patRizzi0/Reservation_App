@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
 from dotenv import load_dotenv
 from connection import engine
-from model.model_reservation import create_reservation, get_all_reservation, get_user_reservations
+from model.model_reservation import ReservationAlreadyExists, create_reservation, get_all_reservation, get_user_reservations
 from model.model_evento import get_all_events, get_event_by_id
 from model.model_seats import get_seats_by_event
 
@@ -274,13 +274,21 @@ def confirm():
     event_id = request.form.get("id_evento")
     seat_id = request.form.get("selected_seat_id")
 
+    if not event_id or not seat_id:
+        flash("Seleziona un posto prima di confermare.", "error")
+        return redirect(url_for("home"))
 
     try:
         create_reservation(user_id, event_id, seat_id)
+    except ReservationAlreadyExists:
+        flash("Posto gia prenotato. Scegli un altro posto.", "error")
+        return redirect(url_for("reservation", id_evento=event_id))
     except Exception as e:
-        print("ERRORE:", e)
-        flash("⚠️ Posto già prenotato. Scegli un altro posto.", "error")
-    return render_template("pages/confirm.html", user_id=user_id, seat_id=seat_id, evento = get_event_by_id(event_id))
+        logger.error(f"Reservation error: {e}", exc_info=True)
+        flash("Errore durante la prenotazione. Riprova.", "error")
+        return redirect(url_for("reservation", id_evento=event_id))
+
+    return render_template("pages/confirm.html", user_id=user_id, seat_id=seat_id, evento=get_event_by_id(event_id))
 
 @app.route("/prenotazioni")
 @login_required

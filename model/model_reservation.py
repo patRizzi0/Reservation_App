@@ -1,6 +1,11 @@
 from connection import engine
 from connection import text
 
+
+class ReservationAlreadyExists(Exception):
+    """Raised when a seat is already reserved for the selected event."""
+
+
 def get_all_reservation():
     """Ritorna TUTTE le prenotazioni (admin)"""
     query = text("""SELECT users.nome, users.cognome, events.nome_evento, seats.section, seats.row_number, seats.seat_number
@@ -12,6 +17,7 @@ def get_all_reservation():
     with engine.connect() as conn:
         result = conn.execute(query)
         return result.mappings().all()
+
 
 def get_user_reservations(user_id):
     """Ritorna le prenotazioni di uno specifico utente"""
@@ -26,32 +32,24 @@ def get_user_reservations(user_id):
     with engine.connect() as conn:
         result = conn.execute(query, {"user_id": user_id})
         return result.mappings().all()
-    
+
+
 def create_reservation(user_id, event_id, seat_id):
-    query_select = text("""
-        SELECT 1 FROM reservations
-        WHERE id_evento = :event_id AND id_seat = :seat_id
-        FOR UPDATE
-        LIMIT 1
+    query = text("""
+        INSERT INTO reservations (id_user, id_evento, id_seat)
+        VALUES (:user_id, :event_id, :seat_id)
+        ON CONFLICT (id_evento, id_seat) DO NOTHING
+        RETURNING id_reservation
     """)
 
-
     with engine.begin() as conn:
-        result = conn.execute(query_select, {
+        reservation_id = conn.execute(query, {
+            "user_id": user_id,
             "event_id": event_id,
             "seat_id": seat_id
         }).scalar()
 
-        if result > 0:
-            raise Exception("Posto già prenotato")
-        else:
-            query_ins = text("""
-                INSERT INTO reservations (id_user, id_evento, id_seat)
-                VALUES (:user_id, :event_id, :seat_id)
-            """)
-            conn.execute(query_ins, {
-                "user_id": user_id,
-                "event_id": event_id,
-                "seat_id": seat_id
-            })
+        if reservation_id is None:
+            raise ReservationAlreadyExists("Posto gia prenotato")
 
+        return reservation_id
