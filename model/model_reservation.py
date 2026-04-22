@@ -29,9 +29,10 @@ def get_user_reservations(user_id):
     
 def create_reservation(user_id, event_id, seat_id):
     query_select = text("""
-        Select count(*) from reservations
-        where id_evento = :event_id and id_seat = :seat_id
-        for update
+        SELECT 1 FROM reservations
+        WHERE id_evento = :event_id AND id_seat = :seat_id
+        FOR UPDATE
+        LIMIT 1
     """)
 
 
