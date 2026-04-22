@@ -1,7 +1,3 @@
-"""
-Database connection and initialization.
-"""
-
 import os
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
@@ -9,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+REDIS_URL = os.getenv("REDIS_URL")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL not found in environment variables")
@@ -39,4 +36,4 @@ def test_connection():
         return False
 
 
-__all__ = ["engine", "get_connection", "test_connection", "text"]
+__all__ = ["engine", "get_connection", "test_connection", "text", "REDIS_URL"]

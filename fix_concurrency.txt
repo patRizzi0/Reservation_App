@@ -1,0 +1,340 @@
+REPORT TECNICO POST-IMPLEMENTAZIONE
+Fix race condition nella prenotazione dei posti
+
+
+1. DESCRIZIONE DEL PROBLEMA
+
+Il problema risolto riguarda una race condition nel flusso di prenotazione di un posto per un evento.
+
+In questo sistema, piu utenti possono visualizzare contemporaneamente la mappa dei posti disponibili e inviare quasi nello stesso momento una richiesta POST verso l'endpoint di conferma prenotazione. La risorsa condivisa e il posto, identificato da id_seat, all'interno di uno specifico evento, identificato da id_evento.
+
+La regola funzionale e semplice:
+
+un posto puo essere prenotato una sola volta per lo stesso evento.
+
+Il bug si verifica quando due richieste concorrenti provano a prenotare lo stesso posto nello stesso intervallo temporale. Se il backend non sincronizza correttamente l'accesso alla risorsa condivisa, entrambe le richieste possono osservare il posto come disponibile e procedere entrambe all'inserimento della prenotazione.
+
+In pratica, il sistema puo arrivare a salvare due righe nella tabella reservations con la stessa coppia logica:
+
+id_evento = X
+id_seat = Y
+
+Questo rappresenta una violazione della consistenza dei dati: dal punto di vista del business, lo stesso posto risulta assegnato a due utenti diversi.
+
+La race condition non dipende dal fatto che l'applicazione sia Flask in modo specifico. Il problema nasce dal fatto che un backend web reale gestisce piu richieste in parallelo. Le richieste possono essere servite da thread diversi, processi diversi o worker diversi. Tutte pero condividono lo stesso database, quindi la garanzia di correttezza deve essere ottenuta nel punto in cui lo stato viene effettivamente letto e modificato: il database.
+
+
+2. ANALISI DELLA CAUSA (ROOT CAUSE)
+
+La causa principale del problema e il pattern check-then-act applicato a una risorsa condivisa senza atomicita.
+
+Il pattern check-then-act significa:
+
+1. controllo se il posto e libero
+2. se e libero, inserisco la prenotazione
+
+Questo flusso sembra corretto quando si ragiona con una sola richiesta alla volta. Diventa pero pericoloso quando due richieste vengono eseguite in parallelo.
+
+Il problema e che il controllo e l'inserimento non sono automaticamente una singola operazione indivisibile. Tra il momento in cui una richiesta controlla la disponibilita e il momento in cui inserisce la prenotazione, un'altra richiesta puo eseguire lo stesso controllo e ottenere lo stesso risultato.
+
+Il vecchio ragionamento era:
+
+se non trovo una prenotazione per quel posto, allora posso inserirla.
+
+Il ragionamento corretto in un sistema concorrente deve invece essere:
+
+devo impedire che qualcun altro possa modificare o validare la stessa risorsa mentre io sto decidendo se inserirla.
+
+Il punto critico era quindi la mancanza di atomicita tra:
+
+lettura dello stato corrente
+decisione applicativa
+scrittura del nuovo stato
+
+Un'altra causa importante riguarda l'uso iniziale del locking sulla tabella sbagliata. Bloccare una riga gia esistente in reservations con SELECT FOR UPDATE non protegge il caso in cui il posto e ancora libero, perche in quel caso la riga nella tabella reservations non esiste ancora. Se non esiste nessuna riga, il database non ha nulla da bloccare.
+
+Per una prenotazione nuova, la risorsa stabile da bloccare non e la prenotazione, ma il posto. Il posto esiste gia nella tabella seats, quindi e una riga reale su cui il database puo prendere un lock.
+
+
+3. SIMULAZIONE TEMPORALE
+
+Scenario: due utenti provano a prenotare lo stesso posto 162 per l'evento 1.
+
+Stato iniziale:
+
+reservations non contiene nessuna riga con:
+id_evento = 1
+id_seat = 162
+
+Flusso non sicuro, senza locking corretto:
+
+T1 - Richiesta A entra nel backend.
+
+T2 - Richiesta A controlla reservations:
+SELECT 1 FROM reservations WHERE id_evento = 1 AND id_seat = 162
+Risultato: nessuna riga.
+A conclude: il posto e libero.
+
+T3 - Prima che A inserisca la prenotazione, arriva la richiesta B.
+
+T4 - Richiesta B controlla reservations:
+SELECT 1 FROM reservations WHERE id_evento = 1 AND id_seat = 162
+Risultato: nessuna riga.
+B conclude: il posto e libero.
+
+T5 - Richiesta A esegue:
+INSERT INTO reservations (id_user, id_evento, id_seat) VALUES (utente_A, 1, 162)
+
+T6 - Richiesta B esegue:
+INSERT INTO reservations (id_user, id_evento, id_seat) VALUES (utente_B, 1, 162)
+
+Risultato finale:
+
+La tabella reservations contiene due prenotazioni per lo stesso posto e lo stesso evento.
+
+La causa non e che il controllo fosse logicamente sbagliato. La causa e che il controllo non era protetto da una sincronizzazione valida fino al momento dell'inserimento.
+
+Questo e il classico difetto del check-then-act: il risultato del check puo diventare obsoleto immediatamente dopo essere stato letto.
+
+
+4. SOLUZIONE IMPLEMENTATA
+
+La soluzione implementata sposta la protezione della concorrenza dentro una transazione database e usa un lock pessimistico sulla riga del posto.
+
+La funzione create_reservation esegue ora il flusso seguente:
+
+1. apre una transazione con engine.begin()
+2. blocca la riga del posto nella tabella seats usando SELECT FOR UPDATE
+3. verifica che il posto esista
+4. controlla se esiste gia una prenotazione per la coppia id_evento, id_seat
+5. se la prenotazione esiste, solleva ReservationAlreadyExists
+6. se la prenotazione non esiste, inserisce la nuova riga in reservations
+7. la transazione viene confermata automaticamente se non ci sono errori
+8. la transazione viene annullata automaticamente se viene sollevata un'eccezione
+
+Il punto centrale e questo:
+
+SELECT id_seat
+FROM seats
+WHERE id_seat = :seat_id
+FOR UPDATE
+
+Questa query prende un lock esclusivo sulla riga del posto nella tabella seats per tutta la durata della transazione.
+
+Finche la transazione A mantiene quel lock, una transazione B che prova a eseguire lo stesso SELECT FOR UPDATE sullo stesso id_seat deve aspettare. Non puo proseguire in parallelo nella parte critica.
+
+La validazione lato server e stata rafforzata anche nella route /confirm.
+
+Il backend verifica che event_id e seat_id siano presenti prima di chiamare create_reservation. Se mancano, la richiesta viene rifiutata e l'utente viene reindirizzato.
+
+Inoltre la route distingue tra:
+
+ReservationAlreadyExists: caso atteso, posto gia prenotato
+Exception generica: errore tecnico o imprevisto
+
+Questo evita di mostrare la pagina di conferma quando la prenotazione non e stata realmente salvata.
+
+
+5. PERCHE LA SOLUZIONE FUNZIONA
+
+La soluzione funziona perche serializza l'accesso alla risorsa condivisa reale: il posto.
+
+Il nuovo flusso con due richieste concorrenti diventa:
+
+T1 - Richiesta A apre una transazione.
+
+T2 - Richiesta A esegue:
+SELECT id_seat FROM seats WHERE id_seat = 162 FOR UPDATE
+
+PostgreSQL blocca la riga seats con id_seat = 162.
+
+T3 - Richiesta B apre una transazione.
+
+T4 - Richiesta B prova a eseguire:
+SELECT id_seat FROM seats WHERE id_seat = 162 FOR UPDATE
+
+B non puo continuare. Deve aspettare che A rilasci il lock.
+
+T5 - Richiesta A controlla reservations.
+Non trova prenotazioni per evento 1, posto 162.
+
+T6 - Richiesta A inserisce la prenotazione.
+
+T7 - Richiesta A termina la transazione.
+Il commit rende visibile la nuova riga in reservations e rilascia il lock su seats.
+
+T8 - Richiesta B puo finalmente continuare.
+Ora il suo SELECT FOR UPDATE ottiene il lock sulla riga seats.
+
+T9 - Richiesta B controlla reservations.
+Questa volta trova la prenotazione creata da A.
+
+T10 - Richiesta B solleva ReservationAlreadyExists.
+Non viene eseguito nessun INSERT.
+
+Risultato finale:
+
+una sola prenotazione viene salvata.
+la seconda richiesta riceve un errore controllato.
+lo stato del database resta consistente.
+
+Questa soluzione funziona perche il lock viene preso prima del controllo di disponibilita e viene mantenuto fino alla fine della transazione. In questo modo nessuna seconda transazione puo entrare nella sezione critica per lo stesso posto mentre la prima non ha ancora concluso.
+
+Il lock non blocca tutto il sistema. Blocca solo la riga del posto specifico. Due utenti possono ancora prenotare posti diversi in parallelo, perche i lock riguardano righe diverse della tabella seats.
+
+
+6. APPROCCI ALTERNATIVI
+
+Approccio 1: vincolo UNIQUE a livello database
+
+Un'alternativa molto solida consiste nell'aggiungere un vincolo unique sulla tabella reservations:
+
+UNIQUE (id_evento, id_seat)
+
+Con questo vincolo, il database impedisce fisicamente l'esistenza di due prenotazioni per lo stesso posto nello stesso evento.
+
+Il codice potrebbe fare un normale INSERT e gestire l'errore di violazione del vincolo, oppure usare PostgreSQL con:
+
+INSERT ...
+ON CONFLICT (id_evento, id_seat) DO NOTHING
+
+Vantaggi:
+
+e la garanzia piu forte per l'integrita dei dati
+protegge anche da bug futuri in altri endpoint
+funziona anche se piu servizi o script scrivono nella stessa tabella
+e semplice da ragionare a livello di regola dati
+
+Svantaggi:
+
+richiede che lo schema del database sia aggiornato correttamente in tutti gli ambienti
+se esistono gia duplicati, la migrazione fallisce finche i dati non vengono puliti
+la gestione dell'errore deve essere fatta con cura per mostrare un messaggio utente corretto
+
+In un sistema maturo, questo approccio dovrebbe comunque essere presente come ultima linea di difesa.
+
+
+Approccio 2: optimistic locking
+
+L'optimistic locking parte dall'idea che i conflitti siano rari. Invece di bloccare subito la risorsa, il sistema prova a completare l'operazione e verifica alla fine se lo stato e rimasto coerente.
+
+Una forma classica usa una colonna version:
+
+UPDATE seats
+SET version = version + 1
+WHERE id_seat = :seat_id AND version = :old_version
+
+Se l'UPDATE modifica zero righe, significa che qualcun altro ha modificato il record nel frattempo.
+
+Nel caso delle prenotazioni, una versione pratica dell'approccio ottimistico e usare un vincolo UNIQUE su (id_evento, id_seat) e lasciare che il database rifiuti il secondo inserimento.
+
+Vantaggi:
+
+ottimo quando i conflitti sono rari
+evita lock espliciti lunghi
+scala bene con molte operazioni indipendenti
+
+Svantaggi:
+
+quando i conflitti sono frequenti, molte richieste falliscono e devono essere ritentate o gestite
+richiede una gestione accurata degli errori
+puo diventare piu complesso se l'operazione coinvolge piu tabelle o piu regole di business
+
+
+Approccio 3: locking pessimistico sulla risorsa
+
+L'approccio implementato e un locking pessimistico.
+
+Il sistema assume che il conflitto sia possibile e quindi prende un lock prima di fare il controllo e l'inserimento.
+
+Vantaggi:
+
+rende il flusso molto esplicito
+funziona bene quando una risorsa specifica non puo essere assegnata due volte
+non richiede necessariamente un vincolo unique gia presente nello schema
+permette di proteggere una sezione critica piu ampia, non solo il singolo INSERT
+
+Svantaggi:
+
+le richieste concorrenti sullo stesso posto vengono messe in attesa
+transazioni lunghe possono ridurre la concorrenza
+se usato male, il locking puo causare attese inutili o deadlock
+richiede disciplina: tutte le parti del codice che prenotano un posto devono usare lo stesso protocollo di lock
+
+
+Confronto sintetico:
+
+Il vincolo UNIQUE protegge l'integrita finale dei dati.
+Il locking pessimistico controlla l'ordine di esecuzione delle operazioni.
+L'optimistic locking evita lock preventivi e gestisce il conflitto quando emerge.
+
+In molti sistemi reali, la soluzione migliore e combinare locking applicativo/transazionale e vincoli database. Il lock rende il workflow ordinato; il vincolo database impedisce che un bug o un altro percorso di scrittura corrompa i dati.
+
+
+7. SCELTA ARCHITETTURALE
+
+La soluzione scelta nel codice attuale usa un lock pessimistico sulla riga seats.
+
+Questa scelta e ragionevole per questo progetto per tre motivi.
+
+Primo: il posto e una risorsa reale e stabile.
+
+La riga in seats esiste prima della prenotazione. Questo la rende un ottimo candidato per il lock. Bloccare reservations non era sufficiente, perche quando il posto e libero non esiste ancora nessuna riga reservations da bloccare.
+
+Secondo: la sezione critica e breve.
+
+Dentro la transazione vengono fatte solo tre operazioni:
+
+lock della riga seats
+controllo in reservations
+insert in reservations
+
+Non ci sono chiamate esterne, elaborazioni lente o interazioni con servizi remoti. Questo e importante perche i lock devono essere mantenuti per il minor tempo possibile.
+
+Terzo: il comportamento utente e chiaro.
+
+La prima richiesta che completa la transazione ottiene il posto. Le richieste successive vedono la prenotazione gia esistente e ricevono un messaggio controllato: posto gia prenotato.
+
+In un sistema di produzione piu rigoroso, aggiungerei comunque anche un vincolo UNIQUE su (id_evento, id_seat). Il locking protegge il flusso corrente, ma il vincolo database protegge l'intero sistema. Se domani viene aggiunto un endpoint admin, uno script di importazione o un job asincrono che inserisce prenotazioni senza usare create_reservation, il vincolo UNIQUE resta l'ultima barriera contro i duplicati.
+
+La scelta architetturale piu robusta sarebbe quindi:
+
+lock pessimistico sulla riga seats per coordinare il workflow di prenotazione
+vincolo UNIQUE su reservations(id_evento, id_seat) per garantire l'integrita assoluta
+gestione esplicita degli errori nel backend per distinguere conflitti attesi da errori tecnici
+
+Nel contesto attuale, il lock su seats risolve il problema operativo anche quando lo schema del database non espone ancora un vincolo compatibile con ON CONFLICT.
+
+
+8. LEZIONI CHIAVE
+
+La prima lezione e che la concorrenza non si risolve con un controllo fatto prima della scrittura. In un backend reale, ogni lettura puo diventare vecchia subito dopo essere stata eseguita.
+
+La seconda lezione e che il pattern check-then-act e pericoloso quando riguarda risorse condivise. Se controllo e azione devono essere coerenti, devono stare dentro una transazione e devono essere protetti da un meccanismo di sincronizzazione.
+
+La terza lezione e che bisogna bloccare la risorsa giusta. Nel caso di una prenotazione nuova, la riga reservations non esiste ancora. Bloccare una riga inesistente non protegge nulla. La risorsa giusta da bloccare e una riga stabile e gia presente, cioe il posto nella tabella seats.
+
+La quarta lezione e che le transazioni non bastano da sole. Una transazione definisce un confine di commit e rollback, ma non rende automaticamente sicuro qualsiasi flusso concorrente. Serve anche un lock, un vincolo, un livello di isolamento adeguato o una strategia ottimistica ben progettata.
+
+La quinta lezione e che la consistenza deve essere garantita vicino ai dati. Validazioni frontend e controlli lato route sono utili per esperienza utente e sicurezza di base, ma non sono sufficienti per proteggere una risorsa condivisa. La decisione finale deve essere protetta nel database.
+
+La sesta lezione e che gli errori di concorrenza devono essere trattati come casi di business attesi. Se due utenti scelgono lo stesso posto, il secondo non deve generare una pagina di conferma falsa o un errore tecnico incomprensibile. Deve ricevere una risposta chiara: il posto e gia stato prenotato.
+
+La settima lezione e che la durata dei lock conta. Un lock deve essere preso il piu tardi possibile, rilasciato il prima possibile e mantenuto solo durante operazioni strettamente necessarie. Questo riduce attese, contesa e rischio di deadlock.
+
+L'ottava lezione e che la soluzione migliore dipende dal dominio. Per dati unici e critici, un vincolo database e spesso indispensabile. Per workflow con piu passaggi, un lock transazionale puo essere piu leggibile e controllabile. Per sistemi ad alto throughput con conflitti rari, un approccio ottimistico puo essere piu efficiente.
+
+La nona lezione e che un sistema corretto non deve dipendere dal numero di worker. Se l'app funziona solo con un singolo processo o con richieste sequenziali, non e realmente sicura. Il codice backend deve restare corretto anche con piu thread, piu processi e piu istanze applicative.
+
+La decima lezione e che la concorrenza va progettata esplicitamente. Non e un dettaglio marginale: ogni volta che piu richieste possono modificare la stessa risorsa, bisogna decidere quale meccanismo garantisce l'ordine, l'atomicita e l'integrita del dato.
+
+
+CONCLUSIONE
+
+La race condition e stata risolta spostando la responsabilita della sincronizzazione nel database, dentro una transazione breve e controllata.
+
+Il nuovo flusso non si limita a chiedere se il posto e libero. Prima blocca la riga del posto, poi controlla la prenotazione, poi inserisce. Questo trasforma una sequenza vulnerabile check-then-act in una sezione critica serializzata.
+
+Il risultato e che due richieste concorrenti per lo stesso posto non possono piu attraversare contemporaneamente il punto decisionale. Una sola prenotazione viene confermata; le altre vengono respinte in modo controllato.
+
+Questa e la differenza fondamentale tra codice che sembra corretto in esecuzione sequenziale e codice robusto in un backend reale concorrente.
