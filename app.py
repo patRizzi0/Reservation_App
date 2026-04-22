@@ -7,7 +7,10 @@ import os
 import logging
 from functools import wraps
 from flask import Flask, redirect, render_template, request, session, flash, url_for
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFError, CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from limits import parse
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
 from dotenv import load_dotenv
@@ -30,10 +33,42 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 
+REDIS_URL = (os.getenv("REDIS_URL") or "").strip()
+FLASK_ENV = (os.getenv("FLASK_ENV") or "development").strip().lower()
+RATE_LIMIT_STORAGE_URL = (os.getenv("RATE_LIMIT_STORAGE_URL") or "").strip()
+
+if RATE_LIMIT_STORAGE_URL:
+    limiter_storage_uri = RATE_LIMIT_STORAGE_URL
+elif FLASK_ENV == "development" and ".internal" in REDIS_URL:
+    limiter_storage_uri = "memory://"
+else:
+    limiter_storage_uri = REDIS_URL or "memory://"
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri=limiter_storage_uri,
+    default_limits=[]
+)
+
 csrf = CSRFProtect(app)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+CSRF_RATE_LIMIT = parse("20 per minute")
+
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    if not limiter.limiter.hit(CSRF_RATE_LIMIT, "csrf", get_remote_address()):
+        logger.warning(f"CSRF rate limit exceeded for {get_remote_address()}")
+        flash("Troppe richieste non valide. Aspetta qualche minuto e riprova.", "error")
+        return redirect(request.referrer or url_for("home")), 429
+
+    logger.warning(f"CSRF validation failed for {get_remote_address()}: {e.description}")
+    flash("Sessione scaduta o richiesta non valida. Riprova.", "error")
+    return redirect(request.referrer or url_for("home"))
 
 
 # 🔥 CRITICAL: Complete decorator
@@ -80,6 +115,7 @@ def inject_user():
 
 
 @app.route("/register", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
 def register():
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
@@ -157,6 +193,7 @@ def register():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip()
@@ -266,6 +303,7 @@ def reservation(id_evento):
     )
 
 @app.route("/confirm", methods=["POST"])
+@limiter.limit("10 per minute")
 def confirm():
     if "id_user" not in session:
         return redirect(url_for("login"))
